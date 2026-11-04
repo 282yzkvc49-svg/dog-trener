@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/* Тёмная тема: системная (prefers-color-scheme) или выбранная вручную (data-theme на <html>). */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* ---------- Токены дизайн-системы ----------
+   Палитра опирается на окрас аусси: шалфейно-зелёный — основной акцент (поводок),
+   голубой мраморный (merle) — отвлечения, медный подпал — подбор с земли. */
+:root {
+  --paper: #f7f6f2;
+  --surface: #ffffff;
+  --surface-2: #efede7;
+  --line: #e3e0d8;
+  --ink: #23262a;
+  --ink-2: #5b6067;
+  --ink-3: #868b91;
+  --sage: #3b7354;
+  --sage-ink: #ffffff;
+  --sage-soft: #e2ece5;
+  --merle: #46668a;
+  --merle-soft: #e3e9f1;
+  --copper: #9d5b29;
+  --copper-soft: #f3e7dc;
+  --amber: #a06d12;
+  --amber-soft: #f6ecd6;
+  --rose: #ad4438;
+  --rose-soft: #f6e1dd;
+  --shadow: 0 1px 2px rgb(35 38 42 / .05), 0 6px 20px -10px rgb(35 38 42 / .14);
+  /* Цвета графиков (проверены валидатором палитры: яркость, насыщенность, различимость при дальтонизме). */
+  --c-leash: #2b8a5a; --c-distr: #4a6fd0; --c-pickup: #c8651a; --c-bad: #c0473a;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --paper: #151718; --surface: #1d2022; --surface-2: #262a2c; --line: #31363a;
+    --ink: #eceeeb; --ink-2: #a5aba9; --ink-3: #7c8381;
+    --sage: #7fbb96; --sage-ink: #0e1912; --sage-soft: #1f3428;
+    --merle: #93b0d0; --merle-soft: #1f2a37; --copper: #d99d6a; --copper-soft: #352619;
+    --amber: #dcad4c; --amber-soft: #352b15; --rose: #e2806f; --rose-soft: #3a211d;
+    --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    --c-leash: #3f9a69; --c-distr: #5e86dd; --c-pickup: #cf7a35; --c-bad: #e06a5c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme=dark] {
+  --paper: #151718; --surface: #1d2022; --surface-2: #262a2c; --line: #31363a;
+  --ink: #eceeeb; --ink-2: #a5aba9; --ink-3: #7c8381;
+  --sage: #7fbb96; --sage-ink: #0e1912; --sage-soft: #1f3428;
+  --merle: #93b0d0; --merle-soft: #1f2a37; --copper: #d99d6a; --copper-soft: #352619;
+  --amber: #dcad4c; --amber-soft: #352b15; --rose: #e2806f; --rose-soft: #3a211d;
+  --shadow: 0 1px 2px rgb(0 0 0 / .4);
+  --c-leash: #3f9a69; --c-distr: #5e86dd; --c-pickup: #cf7a35; --c-bad: #e06a5c;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-sage: var(--sage);
+  --color-sage-ink: var(--sage-ink);
+  --color-sage-soft: var(--sage-soft);
+  --color-merle: var(--merle);
+  --color-merle-soft: var(--merle-soft);
+  --color-copper: var(--copper);
+  --color-copper-soft: var(--copper-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-rose: var(--rose);
+  --color-rose-soft: var(--rose-soft);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-num: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --shadow-card: var(--shadow);
+  --color-c-leash: var(--c-leash);
+  --color-c-distr: var(--c-distr);
+  --color-c-pickup: var(--c-pickup);
+  --color-c-bad: var(--c-bad);
+}
+
+/* ---------- База ---------- */
+@layer base {
+  /* -apple-system-body подхватывает системный размер текста iOS (Dynamic Type); rem масштабируются вместе с ним. */
+  html { font: -apple-system-body; font-family: var(--font-sans); -webkit-text-size-adjust: 100%; }
+  @supports not (font: -apple-system-body) { html { font-size: 100%; } }
+  body {
+    margin: 0; min-height: 100vh; min-height: 100dvh;
+    background: var(--paper); color: var(--ink);
+    font-family: var(--font-sans); line-height: 1.45;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    overscroll-behavior-y: none; overflow-x: hidden;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  input, select, textarea { font-size: max(16px, 1rem); }
+  button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: pointer; }
+  :focus-visible { outline: 2.5px solid var(--sage); outline-offset: 2px; border-radius: 10px; }
+  ::selection { background: var(--sage-soft); }
+  input[type=date], input[type=time] { min-height: 2.75rem; }
+  dialog { color: var(--ink); }
+}
+
+@layer components {
+  .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .card { background: var(--surface); border-radius: 1.25rem; box-shadow: var(--shadow); }
+  .field {
+    width: 100%; min-height: 2.9rem; padding: .6rem .85rem; border-radius: .9rem;
+    background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+  }
+  .field:focus { outline: 2px solid var(--sage); outline-offset: 1px; }
+  textarea.field { min-height: 5.5rem; resize: vertical; }
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-x { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+}
+
+/* ---------- Движение: только в ответ на действия ---------- */
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes sheet-in { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes draw { from { stroke-dashoffset: 48; } to { stroke-dashoffset: 0; } }
+@keyframes ring { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.anim-pop { animation: pop .28s ease-out; }
+.anim-sheet { animation: sheet-in .26s cubic-bezier(.2,.8,.2,1); }
+.anim-fade { animation: fade-in .2s ease-out; }
+.anim-ring { animation: ring .35s cubic-bezier(.2,.8,.2,1) both; }
+.anim-draw { stroke-dasharray: 48; animation: draw .45s .15s ease-out both; }
+.press { transition: transform .12s ease, background-color .15s ease, opacity .15s ease; }
+.press:active { transform: scale(.97); }
+@media (prefers-reduced-motion: reduce) {
+  .anim-pop, .anim-sheet, .anim-fade, .anim-ring, .anim-draw { animation: none !important; }
+  .press, .press:active { transition: none; transform: none; }
+}

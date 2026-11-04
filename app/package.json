@@ -1,0 +1,31 @@
+{
+  "name": "aussie-trainer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Aussie Trainer — PWA для индивидуальной дрессировки австралийской овчарки",
+  "scripts": {
+    "dev": "node scripts/build.mjs --dev",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/serve.mjs dist 4173",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.tests.json",
+    "test": "tsx --test tests/unit/*.test.ts",
+    "test:e2e": "node scripts/build.mjs && playwright test",
+    "icons": "python3 scripts/make_icons.py public --svg scripts/icon.svg --bg \"#2f6046\"",
+    "publish:root": "node scripts/build.mjs && node -e \"const fs=require('fs');for(const f of fs.readdirSync('dist'))fs.copyFileSync('dist/'+f,'../'+f)\""
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-icons": "^5.5.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "playwright": "^1.55.0",
+    "tailwindcss": "^4.1.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "@types/node": "^22.0.0"
+  }
+}

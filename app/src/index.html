@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aussie Trainer</title>
+<meta name="description" content="Индивидуальная дрессировка австралийской овчарки: 12-недельный курс, тренировки на прогулке, прогресс и дневник поведения.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Aussie">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f7f6f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151718" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<script>
+  // Тема применяется до отрисовки, чтобы не было вспышки светлого фона.
+  try { var t = localStorage.getItem('aussie-trainer:theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<!--STYLE-->
+</head>
+<body>
+<div id="root"></div>
+<noscript>Для работы Aussie Trainer нужен включённый JavaScript.</noscript>
+<!--SCRIPT-->
+</body>
+</html>
