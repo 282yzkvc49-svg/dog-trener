@@ -3,6 +3,7 @@ import { clsx } from 'clsx';
 import { LuPawPrint } from 'react-icons/lu';
 import type { DayStatus, DogProfile, SessionStatus } from '../domain/types';
 import { photoUrl } from '../db/repo';
+import { subscribe } from '../db/idb';
 
 export const STATUS: Record<DayStatus | SessionStatus | 'missed', { label: string; bg: string; fg: string; dot: string }> = {
   done: { label: 'Выполнено', bg: 'bg-sage-soft', fg: 'text-sage', dot: 'var(--sage)' },
@@ -27,14 +28,28 @@ export function StatusBadge({ status, className }: { status: keyof typeof STATUS
 
 export const PROBLEM_COLOR: Record<string, string> = { leash: 'var(--c-leash)', distractions: 'var(--c-distr)', pickup: 'var(--c-pickup)', general: 'var(--ink-3)' };
 
-export function DogAvatar({ dog, size = 44, className }: { dog?: DogProfile; size?: number; className?: string }) {
+/**
+ * Адрес фото для показа. Фото другого участника может прийти из облака позже описания —
+ * тогда хук попробует снова, как только в базе появятся новые фото.
+ */
+export function usePhotoUrl(id: string | undefined): string | undefined {
   const [url, setUrl] = useState<string | undefined>();
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!id || url) return;
+    return subscribe((stores) => { if (stores.has('photos')) setTick((t) => t + 1); });
+  }, [id, url]);
   useEffect(() => {
     let alive = true;
-    if (dog?.photoId) photoUrl(dog.photoId).then((u) => alive && setUrl(u)).catch(() => {});
+    if (id) photoUrl(id).then((u) => alive && setUrl(u)).catch(() => {});
     else setUrl(undefined);
     return () => { alive = false; };
-  }, [dog?.photoId]);
+  }, [id, tick]);
+  return id ? url : undefined;
+}
+
+export function DogAvatar({ dog, size = 44, className }: { dog?: DogProfile; size?: number; className?: string }) {
+  const url = usePhotoUrl(dog?.photoId);
   return (
     <span className={clsx('inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-sage-soft text-sage', className)} style={{ width: size, height: size }}>
       {url ? <img src={url} alt={dog?.name ? `Фото: ${dog.name}` : 'Фото собаки'} className="h-full w-full object-cover" /> : <LuPawPrint size={size * 0.5} aria-hidden />}
@@ -43,8 +58,7 @@ export function DogAvatar({ dog, size = 44, className }: { dog?: DogProfile; siz
 }
 
 export function PhotoThumb({ id, className, alt }: { id: string; className?: string; alt: string }) {
-  const [url, setUrl] = useState<string | undefined>();
-  useEffect(() => { let alive = true; photoUrl(id).then((u) => alive && setUrl(u)).catch(() => {}); return () => { alive = false; }; }, [id]);
+  const url = usePhotoUrl(id);
   return url ? <img src={url} alt={alt} className={clsx('object-cover', className)} /> : <span className={clsx('block bg-surface-2', className)} />;
 }
 

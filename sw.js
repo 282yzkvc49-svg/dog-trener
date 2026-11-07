@@ -1,7 +1,7 @@
 // Service worker Aussie Trainer: офлайн-работа после первой загрузки.
 // Имя кеша и список файлов подставляет scripts/build.mjs. Данные пользователя здесь не хранятся —
 // они лежат в IndexedDB и не затрагиваются при обновлении приложения.
-const CACHE = 'aussie-trainer-1.0.0-aa3b670522';
+const CACHE = 'aussie-trainer-1.0.0-32c8f3fc44';
 const ASSETS = [
   "./",
   "./index.html",

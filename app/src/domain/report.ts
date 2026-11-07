@@ -32,6 +32,8 @@ export interface WeekReport {
   minutes: number;
   problems: ProblemSummary[];
   envShare: string;
+  /** Результаты по тем, кто проводил тренировки (если их больше одного). */
+  byTrainer: { name: string; trainings: number; rate: Rate }[];
   levels: { exerciseId: string; title: string; level: number; max: number; levelTitle: string }[];
   levelChanges: string[];
   difficulties: string[];
@@ -105,6 +107,11 @@ export function buildWeekReport(d: DataSet, week: number, todayISO: ISODate): We
 
   const envCount = new Map<number, number>();
   for (const t of trainings) envCount.set(t.environment, (envCount.get(t.environment) ?? 0) + 1);
+  const trainerNames = [...new Set(trainings.map((t) => t.trainedBy).filter((x): x is string => !!x))];
+  const byTrainer = trainerNames.length > 1 ? trainerNames.map((name) => {
+    const ids = new Set(trainings.filter((t) => t.trainedBy === name).map((t) => t.id));
+    return { name, trainings: ids.size, rate: rateOf(res.filter((r) => ids.has(r.sessionId))) };
+  }) : [];
   const envShare = [...envCount.entries()].sort((a, b) => a[0] - b[0]).map(([e, n]) => `${ENV_SHORT[e as 1]} — ${n}`).join(', ');
 
   const usedIds = [...new Set(d.results.filter((r) => isCounted(r) && r.date <= period.to).map((r) => r.exerciseId))];
@@ -158,7 +165,7 @@ export function buildWeekReport(d: DataSet, week: number, todayISO: ISODate): We
   return {
     week, period, title: info?.title ?? `Неделя ${week}`, goal: info?.goal ?? '', plan,
     trainings: trainings.length, minutes: Math.round(trainings.reduce((s, t) => s + trainingSeconds(t), 0) / 60),
-    problems, envShare, levels, levelChanges, difficulties, behaviorChanges, unusual, recommendations, conclusions,
+    problems, envShare, byTrainer, levels, levelChanges, difficulties, behaviorChanges, unusual, recommendations, conclusions,
   };
 }
 
@@ -198,6 +205,7 @@ export function reportText(r: WeekReport, dog: DogProfile | undefined, program: 
   L.push('1. Выполнение плана');
   L.push(`Запланировано обязательных занятий: ${r.plan.due}. Выполнено полностью: ${r.plan.done}, частично: ${r.plan.partial}, пропущено: ${r.plan.missed + r.plan.skipped}.`);
   L.push(`Проведено тренировок: ${r.trainings}, общее время упражнений: ${r.minutes} мин.${r.envShare ? ` Обстановка: ${r.envShare}.` : ''}`);
+  if (r.byTrainer.length) L.push(`Кто проводил: ${r.byTrainer.map((b) => `${b.name} — ${b.trainings} трен., успешных попыток ${pctText(b.rate)} (${b.rate.evaluated})`).join('; ')}.`);
   L.push('');
   L.push('2. Результаты по трём основным проблемам');
   for (const p of r.problems) {
@@ -248,6 +256,7 @@ export function reportJson(r: WeekReport, dog: DogProfile | undefined, d: DataSe
     dog: dog ? { name: dog.name, breed: dog.breed, sex: dog.sex, dateOfBirth: dog.dateOfBirth, approxAge: dog.approxAge, knownCommands: dog.knownCommands } : null,
     week: r.week, period: r.period, theme: r.title, goal: r.goal,
     plan: r.plan, trainings: r.trainings, minutes: r.minutes,
+    byTrainer: r.byTrainer.map((b) => ({ name: b.name, trainings: b.trainings, rate: b.rate.rate, attempts: b.rate.evaluated })),
     problems: r.problems.map((p) => ({ key: p.key, label: p.label, rate: p.rate.rate, attempts: p.rate.evaluated, prevRate: p.prev.rate, prevAttempts: p.prev.evaluated, trend: p.trend, details: p.details })),
     levels: r.levels, levelChanges: r.levelChanges, difficulties: r.difficulties,
     journal: { positive: r.behaviorChanges, unusual: r.unusual },

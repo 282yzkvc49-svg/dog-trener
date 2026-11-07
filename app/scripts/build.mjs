@@ -16,7 +16,19 @@ import { createRequire } from 'node:module';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const src = path.join(root, 'src');
 const pub = path.join(root, 'public');
-const dist = path.join(root, 'dist');
+const dist = path.resolve(root, process.env.OUT_DIR || 'dist');
+
+// Облако: адрес проекта и публичный ключ Supabase — из переменных окружения или app.config.json.
+// Публикуемый ключ только publishable/anon; секретный ключ сборка не принимает.
+function cloudConfig() {
+  let file = {};
+  try { file = JSON.parse(fs.readFileSync(path.join(root, 'app.config.json'), 'utf8')); } catch { /* файла нет — облако выключено */ }
+  const url = process.env.SUPABASE_URL ?? file.supabaseUrl ?? '';
+  const key = process.env.SUPABASE_ANON_KEY ?? file.supabaseAnonKey ?? '';
+  if (/service_role|sb_secret_/i.test(key)) throw new Error('В сборку нельзя класть секретный ключ Supabase — нужен publishable/anon.');
+  return { url, key };
+}
+const cloud = cloudConfig();
 const dev = process.argv.includes('--dev');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const require = createRequire(import.meta.url);
@@ -76,6 +88,9 @@ async function buildJs(buildId) {
     define: {
       __APP_VERSION__: JSON.stringify(pkg.version),
       __BUILD_ID__: JSON.stringify(buildId),
+      __SUPABASE_URL__: JSON.stringify(cloud.url),
+      __SUPABASE_KEY__: JSON.stringify(cloud.key),
+      __SYNC_POLL_MS__: String(Number(process.env.SYNC_POLL_MS) || 10000),
       'process.env.NODE_ENV': JSON.stringify(dev ? 'development' : 'production'),
     },
     logLevel: 'silent',
@@ -109,7 +124,7 @@ export async function runBuild() {
     .replace('__ASSETS__', JSON.stringify(assets, null, 2));
   fs.writeFileSync(path.join(dist, 'sw.js'), sw);
   const kb = Math.round(Buffer.byteLength(html) / 1024);
-  console.log(`✓ dist/ собран за ${Date.now() - t0} мс · index.html ${kb} КБ · кеш ${hash}`);
+  console.log(`✓ ${path.relative(root, dist)}/ собран за ${Date.now() - t0} мс · index.html ${kb} КБ · кеш ${hash}`);
 }
 
 if (dev) {

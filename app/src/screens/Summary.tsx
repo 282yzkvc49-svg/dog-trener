@@ -102,7 +102,7 @@ export function SummaryScreen({ id }: { id: string }) {
         <span className="anim-ring flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-sage text-sage-ink">
           <svg width="34" height="34" viewBox="0 0 24 24" aria-hidden><path className="anim-draw" d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </span>
-        <p className="text-ink-2">{MOODS.find((m) => m.id === t.mood)?.label} · {ENV_LABEL[t.environment]}</p>
+        <p className="text-ink-2">{MOODS.find((m) => m.id === t.mood)?.label} · {ENV_LABEL[t.environment]}{t.trainedBy ? ` · проводил(а) ${t.trainedBy}` : ''}</p>
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat label="Успешно" value={successful} />

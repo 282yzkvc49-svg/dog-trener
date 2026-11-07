@@ -8,6 +8,7 @@ import { DogAvatar, greeting, useNow } from '../ui/common';
 import { navigate } from '../ui/router';
 import { SessionCard } from './SessionCard';
 import { StartSheet } from './StartSheet';
+import { SyncBadge } from './Cloud';
 import { WEEKS, GENERAL_TIPS } from '../content/program';
 import { describeItem, ex } from '../domain/plan';
 import { saveBundle, saveSettings } from '../db/repo';
@@ -81,6 +82,7 @@ export function TodayScreen() {
           <p className="text-[0.9rem] text-ink-2">{greeting(now)}</p>
           <h1 className="truncate text-[1.5rem] font-bold leading-tight tracking-tight">{dog?.name || 'Ваша аусси'}</h1>
         </div>
+        <SyncBadge />
         <IconButton label="Настройки" onClick={() => navigate('settings')}><LuSettings size={24} aria-hidden /></IconButton>
       </header>
 
@@ -101,7 +103,7 @@ export function TodayScreen() {
 
         {active && (
           <div className="card border-l-4 border-sage p-4">
-            <p className="font-semibold">Незавершённая тренировка</p>
+            <p className="font-semibold">{active.trainedBy && active.trainedBy !== s.settings.ownerName ? `Идёт тренировка — проводит ${active.trainedBy}` : 'Незавершённая тренировка'}</p>
             <p className="text-[0.92rem] text-ink-2">«{active.title}», упражнение {Math.min(active.currentIndex + 1, active.items.length)} из {active.items.length}. Всё сохранено.</p>
             <div className="mt-3 flex gap-2">
               <Button variant="primary" onClick={() => navigate(`train/${active.id}`)} icon={<LuPlay size={18} aria-hidden />}>Продолжить</Button>

@@ -214,6 +214,8 @@ export interface TrainingSession {
   currentIndex: number;
   pausedAt?: number;
   pausedTotalMs: number;
+  /** Кто проводил тренировку (имя участника общей собаки). */
+  trainedBy?: string;
   updatedAt: number;
 }
 
@@ -343,5 +345,7 @@ export interface AppSettings {
   onboarded: boolean;
   lastBackupAt?: number;
   installHintHidden?: boolean;
+  /** Как подписывать тренировки этого телефона. */
+  ownerName?: string;
   updatedAt: number;
 }

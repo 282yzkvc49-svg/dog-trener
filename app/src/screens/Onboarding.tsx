@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { clsx } from 'clsx';
-import { LuCamera, LuCheck, LuChevronLeft, LuHeartHandshake, LuShieldCheck, LuTimer, LuTrendingUp, LuPawPrint } from 'react-icons/lu';
+import { LuCamera, LuCheck, LuChevronLeft, LuHeartHandshake, LuShieldCheck, LuTimer, LuTrendingUp, LuPawPrint, LuUsers } from 'react-icons/lu';
 import type { DogProfile } from '../domain/types';
 import { defaultDog } from '../db/defaults';
 import { completeOnboarding, savePhoto } from '../db/repo';
@@ -14,6 +14,7 @@ import { navigate } from '../ui/router';
 import { PhotoThumb } from '../ui/common';
 import { isStandalone } from '../lib/pwa';
 import { ImportBackup } from './ImportBackup';
+import { JoinSheet } from './Cloud';
 
 const STEPS = 6;
 
@@ -25,6 +26,7 @@ export function Onboarding() {
   const [morning, setMorning] = useState('08:00');
   const [evening, setEvening] = useState('19:00');
   const [busy, setBusy] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
 
   const next = () => setStep((s) => Math.min(STEPS, s + 1));
   const prev = () => setStep((s) => Math.max(1, s - 1));
@@ -73,12 +75,14 @@ export function Onboarding() {
             <ul className="mt-8 space-y-4 text-ink">
               <li className="flex gap-3"><LuTimer className="mt-0.5 shrink-0 text-sage" size={22} aria-hidden /><span>15–20 минут в день: короткое утро и основное занятие вечером.</span></li>
               <li className="flex gap-3"><LuTrendingUp className="mt-0.5 shrink-0 text-sage" size={22} aria-hidden /><span>Каждая попытка записывается, сложность растёт только по результатам.</span></li>
-              <li className="flex gap-3"><LuShieldCheck className="mt-0.5 shrink-0 text-sage" size={22} aria-hidden /><span>Всё хранится на этом устройстве. Без регистрации и интернета.</span></li>
+              <li className="flex gap-3"><LuShieldCheck className="mt-0.5 shrink-0 text-sage" size={22} aria-hidden /><span>Всё хранится на этом телефоне и работает без интернета. Аккаунт нужен, только если тренируете вдвоём.</span></li>
             </ul>
-            <div className="mt-8">
+            <div className="mt-8 grid gap-2">
+              <Button full onClick={() => setJoinOpen(true)} icon={<LuUsers size={18} aria-hidden />}>Присоединиться к общей собаке</Button>
               <ImportBackup hasData={false} label="Восстановить из резервной копии" />
-              <p className="mt-1.5 px-1 text-[0.82rem] text-ink-3">Если переносите данные со старого телефона — выберите файл копии в «Файлах».</p>
+              <p className="px-1 text-[0.82rem] text-ink-3">Если собаку уже ведёт второй участник — присоединитесь по его коду. Если переносите данные со старого телефона — выберите файл копии.</p>
             </div>
+            <JoinSheet open={joinOpen} onClose={() => setJoinOpen(false)} />
             {!isStandalone() && (
               <p className="mt-4 rounded-2xl bg-merle-soft p-4 text-[0.92rem]">
                 Совет: сначала добавьте приложение на экран «Домой» — в Safari «Поделиться» → «На экран „Домой“» — и открывайте его с иконки. У установленного приложения своё хранилище, данные из вкладки Safari туда не переносятся.

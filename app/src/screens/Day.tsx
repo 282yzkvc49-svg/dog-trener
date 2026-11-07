@@ -144,7 +144,7 @@ export function DayView({ date }: { date: string }) {
               return (
                 <li key={tr.id}>
                   <button className="press flex min-h-11 w-full items-center justify-between rounded-xl px-2 text-left" onClick={() => navigate(`train/${tr.id}/summary`)}>
-                    <span>{tr.title}</span><span className="num text-ink-2">{all ? `${Math.round((ok / all) * 100)}% · ${all} попыт.` : 'без попыток'}</span>
+                    <span>{tr.title}{tr.trainedBy ? <span className="text-ink-2"> · {tr.trainedBy}</span> : null}</span><span className="num text-ink-2">{all ? `${Math.round((ok / all) * 100)}% · ${all} попыт.` : 'без попыток'}</span>
                   </button>
                 </li>
               );

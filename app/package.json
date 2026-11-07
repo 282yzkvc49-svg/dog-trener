@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.tests.json",
     "test": "tsx --test tests/unit/*.test.ts",
     "test:e2e": "node scripts/build.mjs && playwright test",
+    "test:sync": "OUT_DIR=dist-e2e SUPABASE_URL=http://127.0.0.1:54400 SUPABASE_ANON_KEY=sb_publishable_e2e_key_000000 SYNC_POLL_MS=1500 node scripts/build.mjs && playwright test -c playwright.sync.config.ts",
+    "test:sql": "bash tests/sql/run.sh",
     "icons": "python3 scripts/make_icons.py public --svg scripts/icon.svg --bg \"#2f6046\"",
     "publish:root": "node scripts/build.mjs && node -e \"const fs=require('fs');for(const f of fs.readdirSync('dist'))fs.copyFileSync('dist/'+f,'../'+f)\""
   },

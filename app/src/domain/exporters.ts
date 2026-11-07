@@ -69,7 +69,7 @@ function csvCell(v: unknown): string {
 /** CSV для Excel/Numbers: разделитель «;», BOM для кириллицы. */
 export function buildCsv(results: ExerciseResult[], trainings: TrainingSession[]): string {
   const byId = new Map(trainings.map((t) => [t.id, t]));
-  const header = ['Дата', 'Время суток', 'Тренировка', 'Упражнение', 'Направление', 'Уровень', 'Обстановка', 'План', 'Попыток', 'Успешно', 'Неудачно', 'Успешность, %', 'Пропущено', 'Не было встреч', 'Натяжения', 'Мин. дистанция, м', 'Сильные реакции', 'Переключения', 'Сильный стресс', 'Состояние собаки', 'Длительность, сек', 'Заметки'];
+  const header = ['Дата', 'Время суток', 'Тренировка', 'Упражнение', 'Направление', 'Уровень', 'Обстановка', 'План', 'Попыток', 'Успешно', 'Неудачно', 'Успешность, %', 'Пропущено', 'Не было встреч', 'Натяжения', 'Мин. дистанция, м', 'Сильные реакции', 'Переключения', 'Сильный стресс', 'Состояние собаки', 'Кто проводил', 'Длительность, сек', 'Заметки'];
   const rows = [...results].sort((a, b) => a.startedAt - b.startedAt).map((r) => {
     const t = byId.get(r.sessionId);
     const e = ex(r.exerciseId);
@@ -79,7 +79,7 @@ export function buildCsv(results: ExerciseResult[], trainings: TrainingSession[]
       { leash: 'поводок', distractions: 'отвлечения', pickup: 'подбор', general: 'общие' }[e.problem], r.difficultyLevel, ENV_SHORT[r.environment],
       r.target, r.attempted, r.successful, r.unsuccessful, ev ? Math.round((r.successful / ev) * 100) : '',
       r.skipped ? 'да' : '', r.noOpportunity ? 'да' : '', r.tensions ?? '', r.distanceToTrigger ?? '', r.strongReactions ?? '', r.switched ?? '',
-      r.stressed ? 'да' : '', t?.mood ? MOOD[t.mood] : '', r.durationSeconds, r.notes,
+      r.stressed ? 'да' : '', t?.mood ? MOOD[t.mood] : '', t?.trainedBy ?? '', r.durationSeconds, r.notes,
     ].map(csvCell).join(';');
   });
   return '\uFEFF' + [header.join(';'), ...rows].join('\r\n') + '\r\n';

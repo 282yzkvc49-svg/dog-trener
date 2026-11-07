@@ -100,6 +100,7 @@ export async function startTraining(o: StartOptions): Promise<string> {
     date: today(), timeOfDay: o.timeOfDay ?? o.scheduled?.timeOfDay, title: o.title,
     items: o.items.map((i) => ({ ...i })), startedAt: now, status: 'active', environment: o.environment,
     notes: '', currentIndex: 0, pausedTotalMs: 0, updatedAt: now,
+    trainedBy: getState().settings.ownerName?.trim() || undefined,
   };
   await db.put('trainings', t);
   return t.id;
@@ -137,7 +138,8 @@ export async function addAttempt(t: TrainingSession, r: ExerciseResult, a: Omit<
   const prev = attemptsOf(r.id);
   const index = prev.reduce((m, x) => Math.max(m, x.index), 0) + 1;
   const now = Date.now();
-  const attempt: Attempt = { ...a, id: `${r.id}:${index}`, resultId: r.id, sessionId: t.id, exerciseId: r.exerciseId, index, at: now };
+  // Случайный суффикс: два телефона, отмечающие одно упражнение без сети, не получат одинаковых id.
+  const attempt: Attempt = { ...a, id: `${r.id}:${index}:${uid().slice(0, 6)}`, resultId: r.id, sessionId: t.id, exerciseId: r.exerciseId, index, at: now };
   const sum = summarize([...prev, attempt], ex(r.exerciseId).measurement);
   const next: ExerciseResult = { ...r, ...sum, noOpportunity: false, durationSeconds: exerciseSeconds(r, t, now), updatedAt: now };
   await db.batch([
@@ -238,11 +240,23 @@ export async function savePhoto(blob: Blob, width: number, height: number): Prom
 export const deletePhoto = (id: string) => db.del('photos', id);
 
 const urlCache = new Map<string, string>();
+type PhotoFetcher = (id: string) => Promise<Blob | null>;
+let photoFetcher: PhotoFetcher | null = null;
+/** Облако регистрирует загрузчик: фото, сделанные другим участником, скачиваются при первом показе. */
+export function setPhotoFetcher(f: PhotoFetcher | null) { photoFetcher = f; }
+const fetching = new Map<string, Promise<Blob | null>>();
+
 export async function photoUrl(id: string): Promise<string | undefined> {
   if (urlCache.has(id)) return urlCache.get(id);
-  const p = await db.get<{ blob: Blob }>('photos', id);
+  const p = await db.get<{ blob?: Blob | null }>('photos', id);
   if (!p) return undefined;
-  const url = URL.createObjectURL(p.blob);
+  let blob = p.blob ?? null;
+  if (!blob && photoFetcher) {
+    if (!fetching.has(id)) fetching.set(id, photoFetcher(id).finally(() => setTimeout(() => fetching.delete(id), 30_000)));
+    blob = await fetching.get(id)!;
+  }
+  if (!blob) return undefined;
+  const url = URL.createObjectURL(blob);
   urlCache.set(id, url);
   return url;
 }
@@ -275,6 +289,9 @@ export async function markBackupDone() {
 
 /** Полная замена данных копией — одной транзакцией. */
 export async function importBackup(b: BackupFile) {
+  if (db.isTracking()) {
+    throw new Error('Телефон подключён к общей собаке — данные приходят из облака. Чтобы восстановить копию, сначала отключите синхронизацию в настройках.');
+  }
   const ops: db.Op[] = db.BACKUP_STORES.map((store) => ({ type: 'clear' as const, store }));
   for (const [store, rows] of Object.entries(b.data)) {
     if (!(db.BACKUP_STORES as string[]).includes(store) || store === 'photos') continue;

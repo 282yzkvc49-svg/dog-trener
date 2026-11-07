@@ -1,10 +1,13 @@
 // Настройки: тема, время и дни занятий, напоминания, календарь (ICS), резервные копии, удаление данных.
 
+import { clsx } from 'clsx';
 import { useEffect, useState } from 'react';
 import { LuCalendarPlus, LuCirclePause, LuCirclePlay, LuDownload, LuFileSpreadsheet, LuShieldCheck, LuTrash2, LuUser } from 'react-icons/lu';
 import { useApp, current } from '../db/store';
 import { APP_VERSION, exportBackup, markBackupDone, saveBundle, saveSettings, wipeAll } from '../db/repo';
 import { ImportBackup } from './ImportBackup';
+import { CloudSection } from './Cloud';
+import { cloud, useCloud } from '../cloud/cloud';
 import { DB_VERSION } from '../db/idb';
 import { pauseProgram, resumeProgram } from '../domain/schedule';
 import { buildCsv, buildIcs, buildReportReminderIcs } from '../domain/exporters';
@@ -18,6 +21,7 @@ import { applyUpdate, isStandalone, useUpdateAvailable } from '../lib/pwa';
 export function SettingsScreen() {
   const s = useApp();
   const { program, days, sessions } = current(s);
+  const cloudStatus = useCloud();
   const st = s.settings;
   const update = useUpdateAvailable();
   const [busy, setBusy] = useState(false);
@@ -42,9 +46,15 @@ export function SettingsScreen() {
   }
 
   async function wipe() {
-    const ok = await confirmDialog({ title: 'Удалить все данные?', text: 'Профиль, программа, тренировки, дневник и фото будут удалены с этого устройства без возможности восстановления.', confirm: 'Удалить всё', danger: true, requireText: 'УДАЛИТЬ' });
+    const shared = !!cloudStatus.pack;
+    const ok = await confirmDialog({
+      title: 'Удалить все данные?',
+      text: 'Профиль, программа, тренировки, дневник и фото будут удалены с этого устройства без возможности восстановления.'
+        + (shared ? '\nТелефон отключится от общей собаки. Данные в облаке и у второго участника останутся.' : ''),
+      confirm: 'Удалить всё', danger: true, requireText: 'УДАЛИТЬ',
+    });
     if (!ok) return;
-    try { await wipeAll(); navigate('today', { replace: true }); toast('Все данные удалены'); } catch (e) { toastError(e); }
+    try { if (shared || cloudStatus.user) await cloud.forgetDevice(); await wipeAll(); navigate('today', { replace: true }); toast('Все данные удалены'); } catch (e) { toastError(e); }
   }
 
   async function ics() {
@@ -90,7 +100,9 @@ export function SettingsScreen() {
         </div>
       )}
 
-      <SectionTitle className="mt-2">Оформление</SectionTitle>
+      <CloudSection />
+
+      <SectionTitle>Оформление</SectionTitle>
       <Segmented label="Тема" value={st.theme} onChange={(v) => set({ theme: v })} options={[{ id: 'system', label: 'Как в системе' }, { id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }]} />
       <p className="mt-2 px-1 text-[0.82rem] text-ink-3">Размер текста следует системной настройке iPhone («Экран и яркость» → «Размер текста»).</p>
 
@@ -131,8 +143,10 @@ export function SettingsScreen() {
 
       <SectionTitle>Резервная копия</SectionTitle>
       <section className="card p-4">
-        <p className="rounded-xl bg-amber-soft p-3 text-[0.9rem]">
-          Все данные хранятся только в браузере этого устройства. Их можно потерять при удалении иконки, очистке данных Safari или смене телефона. Сохраняйте копию в «Файлы» раз в неделю.
+        <p className={clsx('rounded-xl p-3 text-[0.9rem]', cloudStatus.pack ? 'bg-surface-2' : 'bg-amber-soft')}>
+          {cloudStatus.pack
+            ? 'Данные хранятся на телефоне и в облаке общей собаки: при смене телефона достаточно войти и подключиться снова. Копия в «Файлах» — дополнительная страховка.'
+            : 'Все данные хранятся только в браузере этого устройства. Их можно потерять при удалении иконки, очистке данных Safari или смене телефона. Сохраняйте копию в «Файлы» раз в неделю.'}
         </p>
         <p className="mt-3 text-[0.92rem]"><span className="text-ink-2">Последняя копия: </span>{st.lastBackupAt ? fmtDateTime(st.lastBackupAt) : 'ещё не сохранялась'}</p>
         <div className="mt-1 divide-y divide-line">
@@ -140,7 +154,7 @@ export function SettingsScreen() {
         </div>
         <div className="mt-2 grid gap-2">
           <Button variant="primary" full disabled={busy} onClick={exportJson} icon={<LuDownload size={18} aria-hidden />}>Сохранить резервную копию</Button>
-<ImportBackup hasData />
+{cloudStatus.pack ? <p className="rounded-xl bg-surface-2 p-3 text-[0.88rem] text-ink-2">Восстановление из файла недоступно, пока телефон подключён к общей собаке: данные приходят из облака. Сохранять копию можно как обычно.</p> : <ImportBackup hasData />}
           <Button full onClick={csv} icon={<LuFileSpreadsheet size={18} aria-hidden />}>Экспорт статистики в CSV</Button>
         </div>
       </section>
